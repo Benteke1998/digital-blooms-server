@@ -49,13 +49,11 @@ def update_usage():
         return jsonify({"status": "unlock event processed"}), 200
 
     # 2. Handle reset signal (all zeros)
-try:
     session_duration = int(data.get('session_duration', 0))
     session_delta = int(data.get('session_delta', 0))
     screen_on_time = int(data.get('screen_on_time', 0))
     screen_delta = int(data.get('screen_delta', 0))
-except (ValueError, TypeError):
-    return jsonify({"error": "Invalid data format"}), 400
+
 
 # Trigger reset ONLY if ALL are explicitly zero AND not None
     if session_duration == 0 and session_delta == 0 and screen_on_time == 0 and screen_delta == 0:
