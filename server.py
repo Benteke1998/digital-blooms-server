@@ -29,7 +29,7 @@ def move_servo_to(target_angle):
     for angle in range(servo_angle, target_angle + step, step):
         my_servo.angle = angle
         print(f"Servo angle: {angle}")
-        time.sleep(0.02)
+        time.sleep(0.1)
     servo_angle = target_angle
 
 @app.route('/data', methods=['POST'])
@@ -44,15 +44,18 @@ def update_usage():
 
     # 1. Handle unlock event FIRST
     if 'event' in data and data['event'] == 'unlock':
-        print("Phone unlock detected. Rotating +1°.")
-        move_servo_to(min(servo_angle + 4, 180))
+        print("Phone unlock detected. Rotating +2°.")
+        move_servo_to(min(servo_angle + 2, 180))
         return jsonify({"status": "unlock event processed"}), 200
 
     # 2. Handle reset signal (all zeros)
-    session_duration = data.get('session_duration')
-    session_delta = data.get('session_delta')
-    screen_on_time = data.get('screen_on_time')
-    screen_delta = data.get('screen_delta')
+try:
+    session_duration = int(data.get('session_duration', 0))
+    session_delta = int(data.get('session_delta', 0))
+    screen_on_time = int(data.get('screen_on_time', 0))
+    screen_delta = int(data.get('screen_delta', 0))
+except (ValueError, TypeError):
+    return jsonify({"error": "Invalid data format"}), 400
 
 # Trigger reset ONLY if ALL are explicitly zero AND not None
     if session_duration == 0 and session_delta == 0 and screen_on_time == 0 and screen_delta == 0:
@@ -64,8 +67,6 @@ def update_usage():
         inactivity_count = 0
         return jsonify({"status": "reset done"}), 200
 
-
-
     # --- 3. Track continuous screen usage (screen_delta > 0) ---
     if screen_delta == session_delta:
         continuous_usage_count += 1
@@ -74,8 +75,8 @@ def update_usage():
         continuous_usage_count = 0
 
     if continuous_usage_count >= 3:  # 3 x 10s = 30s continuous use
-        print("30s continuous use detected. Rotating +3°.")
-        move_servo_to(min(servo_angle + 10, 180))
+        print("30s continuous use detected. Rotating +5°.")
+        move_servo_to(min(servo_angle + 5, 180))
         continuous_usage_count = 0
 
     # --- 4. Track inactivity (screen_delta == 0) ---
@@ -85,17 +86,12 @@ def update_usage():
     else:
         inactivity_count = 0
 
-    if inactivity_count >= 6:  # 20 x 15s = 5 min inactivity
-        print("5 min inactivity detected. Rotating -5°.")
+    if inactivity_count >= 18:  # 18 x 10s = 3 min inactivity
+        print("3 min inactivity detected. Rotating -5°.")
         move_servo_to(max(servo_angle - 5, 0))
         inactivity_count = 0
 
-    # --- 5. Update previous screen_on_time ---
-    prev_screen_on_time = screen_on_time
-
     return jsonify({"status": "ok"}), 200
-
-
 
 
 if __name__ == '__main__':
