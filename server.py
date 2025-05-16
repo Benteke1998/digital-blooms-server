@@ -32,6 +32,16 @@ def move_servo_to(target_angle):
         time.sleep(0.1)
     servo_angle = target_angle
 
+def move_servo_to_slow(target_angle):
+    global servo_angle
+    target_angle = max(0, min(180, target_angle))
+    step = 1 if target_angle > servo_angle else -1
+    for angle in range(servo_angle, target_angle + step, step):
+        my_servo.angle = angle
+        print(f"Slow reset: Servo angle: {angle}")
+        time.sleep(0.4)  # slower step
+    servo_angle = target_angle
+
 @app.route('/data', methods=['POST'])
 def update_usage():
     global servo_angle, prev_screen_on_time, continuous_usage_count, inactivity_count
@@ -53,12 +63,11 @@ def update_usage():
     session_delta = int(data.get('session_delta', 0))
     screen_on_time = int(data.get('screen_on_time', 0))
     screen_delta = int(data.get('screen_delta', 0))
-
-
+    
 # Trigger reset ONLY if ALL are explicitly zero AND not None
     if session_duration == 0 and session_delta == 0 and screen_on_time == 0 and screen_delta == 0:
         print("Reset signal received. Moving servo to 0°.")
-        move_servo_to(0)
+        move_servo_to_slow(0)
         servo_angle = 0
         prev_screen_on_time = 0
         continuous_usage_count = 0
