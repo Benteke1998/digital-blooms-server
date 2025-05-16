@@ -39,7 +39,7 @@ def move_servo_to_slow(target_angle):
     for angle in range(servo_angle, target_angle + step, step):
         my_servo.angle = angle
         print(f"Slow reset: Servo angle: {angle}")
-        time.sleep(0.4)  # slower step
+        time.sleep(0.2)  # slower step
     servo_angle = target_angle
 
 @app.route('/data', methods=['POST'])
