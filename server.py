@@ -74,7 +74,7 @@ def update_usage():
         inactivity_count = 0
         return jsonify({"status": "reset done"}), 200
 
-    # --- 3. Track continuous screen usage (screen_delta > 0) ---
+    # --- 3. Track continuous screen usage (screen_delta = 10) ---
     if screen_delta == session_delta:
         continuous_usage_count += 1
         print(f"Continuous usage count: {continuous_usage_count}")
